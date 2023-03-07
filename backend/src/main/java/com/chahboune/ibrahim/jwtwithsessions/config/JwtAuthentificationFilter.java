@@ -56,16 +56,31 @@ public class JwtAuthentificationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            userEmail = jwtService.extractUsername(refreshToken);
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-            if (jwtService.isTokenValid(refreshToken,userDetails)){
 
-                setUserToContext(userDetails, request);
-                String newAccessToken = jwtService.generateToken(userDetails);
-                response.setHeader("new_access_token", newAccessToken);
+            try {
+                userEmail = jwtService.extractUsername(refreshToken);
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+                if (jwtService.isTokenValid(refreshToken,userDetails)){
 
+                    setUserToContext(userDetails, request);
+                    String newAccessToken = jwtService.generateToken(userDetails);
+                    response.setHeader("new_access_token", newAccessToken);
 
+                }
+
+            } catch (Exception ex) {
+                filterChain.doFilter(request, response);
+                return;
             }
+//            userEmail = jwtService.extractUsername(refreshToken);
+//            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+//            if (jwtService.isTokenValid(refreshToken,userDetails)){
+//
+//                setUserToContext(userDetails, request);
+//                String newAccessToken = jwtService.generateToken(userDetails);
+//                response.setHeader("new_access_token", newAccessToken);
+//
+//            }
 
         }
 

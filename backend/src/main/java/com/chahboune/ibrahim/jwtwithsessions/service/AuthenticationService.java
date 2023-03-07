@@ -8,8 +8,13 @@ import com.chahboune.ibrahim.jwtwithsessions.model.User;
 import com.chahboune.ibrahim.jwtwithsessions.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +29,8 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+
+    private final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
 
     public User register(RegisterRequest request) {
@@ -68,5 +75,23 @@ public class AuthenticationService {
     }
 
 
+    public AuthenticationResponse refresh(HttpServletResponse response) {
+        // Get user from the context
+        User user = null;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!(authentication instanceof AnonymousAuthenticationToken)) {
+            String currentUserName = authentication.getName();
+            user = repository.findByEmail(currentUserName)
+                    .orElseThrow();
+        }
+        logger.info("User: " + user);
 
+        // Generate new token
+        var jwtToken = jwtService.generateToken(user);
+
+        // return new token
+        return AuthenticationResponse.builder()
+                .token(jwtToken)
+                .build();
+    }
 }
