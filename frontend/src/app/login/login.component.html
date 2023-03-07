@@ -1,15 +1,15 @@
 <mat-card>
   <mat-card-content>
-    <form class="form">
+    <form #form="ngForm" class="form" (submit)="login($event)">
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Username</mat-label>
-        <input matInput>
+        <mat-label>Email</mat-label>
+        <input [(ngModel)]="loginPayload.email" name="email" matInput>
       </mat-form-field>
       <mat-form-field appearance="fill">
         <mat-label>Password</mat-label>
-        <input matInput type="password">
+        <input matInput type="password" [(ngModel)]="loginPayload.password" name="password">
       </mat-form-field>
-      <button mat-raised-button color="primary">Login</button>
+      <button mat-raised-button color="primary" type="submit">Login</button>
     </form>
   </mat-card-content>
 </mat-card>
