@@ -6,7 +6,7 @@ import { Injectable } from "@angular/core";
 import { Observable } from "rxjs/internal/Observable";
 import { map } from "rxjs/internal/operators/map";
 import { catchError, mergeMap, of, switchMap, tap } from 'rxjs';
-import { login, loginError, logout, setAccessToken, setIsAuthenticated, setUser } from "../actions/auth.actions";
+import { initialStateError, login, loginError, logout, setAccessToken, setInitialState,  } from "../actions/auth.actions";
 
 
 // add ngrx effects commands here : https://ngrx.io/guide/effects
@@ -21,7 +21,7 @@ export class AuthEffects {
     ) { }
 
 
-    login$ = createEffect(() : Observable<any> => {
+    login$ = createEffect(()  => {
       return this.actions$.pipe(
         ofType(login),
         switchMap(({ email, password }) => {
@@ -38,7 +38,7 @@ export class AuthEffects {
     // on logout, just remove the token
     // and navigate to login page
     // no need to dispatch any actions after that
-    logout$ = createEffect(() : Observable<any> => {
+    logout$ = createEffect(()  => {
       return this.actions$.pipe(
         ofType(logout),
         tap(() => {
@@ -53,14 +53,14 @@ export class AuthEffects {
     // using  a post request to the server
     // and put into the store
 
-    init$ = createEffect(() : Observable<any> => {
+    init$ = createEffect(()  => {
       return this.actions$.pipe(
         ofType(ROOT_EFFECTS_INIT),
         mergeMap(() => {
           return this.authService.getAccessToken()
           .pipe(
-            map((user) => setUser({ user: user })),
-            catchError(() => of(loginError({ message: "Login failed 2" })))
+            map((data) => setInitialState({ accessToken: data.token, ready: true })),
+            catchError(() => of(initialStateError({ accessToken: null, ready: true })))
           )
         })
       );

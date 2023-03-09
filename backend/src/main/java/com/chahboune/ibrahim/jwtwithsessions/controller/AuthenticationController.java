@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @RestController
@@ -41,9 +42,9 @@ public class AuthenticationController {
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthenticationResponse> refresh(
-            HttpServletResponse response
+            HttpServletRequest request
     ){
-        return ResponseEntity.ok(authService.refresh(response));
+        return ResponseEntity.ok(authService.refresh(request));
     }
 
 

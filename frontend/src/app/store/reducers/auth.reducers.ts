@@ -1,6 +1,6 @@
 import { User } from "src/app/common/models/user";
 import { createReducer, on } from "@ngrx/store";
-import { removeAccessToken, removeErrorMessage, removeUser, setAccessToken, setErrorMessage, setIsAuthenticated, setUser } from "../actions/auth.actions";
+import { initialStateError, removeAccessToken, removeErrorMessage, removeUser, setAccessToken, setErrorMessage, setInitialState, setIsAuthenticated, setUser } from "../actions/auth.actions";
 
 // Defining the state of the auth store
 
@@ -9,6 +9,7 @@ export interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
   errorMessage: string | null;
+  ready: boolean;
 }
 
 // Defining the initial state of the auth store
@@ -16,7 +17,8 @@ export const initialState: AuthState = {
   accessToken: null,
   isAuthenticated: false,
   user: null,
-  errorMessage: null
+  errorMessage: null,
+  ready: false
 }
 
 
@@ -30,4 +32,6 @@ export const authReducer = createReducer(
   on(removeUser, (state) => ({ ...state, user: null })),
   on(removeAccessToken, (state) => ({ ...state, accessToken: null })),
   on(removeErrorMessage, (state) => ({ ...state, errorMessage: null })),
+  on(setInitialState, (state, { ready , accessToken}) => ({ ...state, ready , accessToken})),
+  on(initialStateError, (state, { ready , accessToken}) => ({ ...state, ready , accessToken}))
 );

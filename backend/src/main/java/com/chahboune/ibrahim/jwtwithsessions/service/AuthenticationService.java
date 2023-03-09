@@ -10,6 +10,8 @@ import com.chahboune.ibrahim.jwtwithsessions.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,8 +19,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @Service
@@ -29,6 +33,7 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final Environment env;
 
     private final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
@@ -65,6 +70,7 @@ public class AuthenticationService {
         Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
         refreshTokenCookie.setPath("/");
         refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setMaxAge(Integer.parseInt(env.getProperty("REFRESH_TOKEN_VALIDITY_SECONDS"))); // 30 days
 
         // Add cookie to response
         response.addCookie(refreshTokenCookie);
@@ -75,16 +81,29 @@ public class AuthenticationService {
     }
 
 
-    public AuthenticationResponse refresh(HttpServletResponse response) {
-        // Get user from the context
-        User user = null;
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof AnonymousAuthenticationToken)) {
-            String currentUserName = authentication.getName();
-            user = repository.findByEmail(currentUserName)
-                    .orElseThrow();
+    public AuthenticationResponse refresh(HttpServletRequest request) {
+        // Get Refresh token from cookie
+//        User user = null;
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        if (!(authentication instanceof AnonymousAuthenticationToken)) {
+//            String currentUserName = authentication.getName();
+//            user = repository.findByEmail(currentUserName)
+//                    .orElseThrow();
+//        }
+//        logger.info("User: " + user);
+
+        AuthenticationResponse A = null;
+        String refreshToken = extractRefreshToken(request);
+        if(refreshToken == null) {
+            return ResponseEntity.badRequest().body(A).getBody();
         }
-        logger.info("User: " + user);
+
+        // Get username from token
+        String username = jwtService.extractUsername(refreshToken);
+
+        // Get user from database
+        var user = repository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username : " + username));
 
         // Generate new token
         var jwtToken = jwtService.generateToken(user);
@@ -93,5 +112,17 @@ public class AuthenticationService {
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .build();
+    }
+
+    private String extractRefreshToken(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("refreshToken")) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
 }

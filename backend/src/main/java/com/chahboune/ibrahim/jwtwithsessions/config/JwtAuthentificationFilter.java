@@ -25,6 +25,7 @@ public class JwtAuthentificationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
+
     @Override
     protected void doFilterInternal
             (
@@ -40,7 +41,7 @@ public class JwtAuthentificationFilter extends OncePerRequestFilter {
         // Extracting the access Token
         jwt = extractAccessToken(request);
         refreshToken = extractRefreshToken(request);
-        if(jwt == null || refreshToken == null) {
+        if(jwt == null && refreshToken == null) {
             filterChain.doFilter(request, response);
             return;
         }

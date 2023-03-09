@@ -1,4 +1,5 @@
 import { createFeatureSelector, createSelector } from "@ngrx/store";
+import { Observable } from "rxjs";
 import { AuthState } from "../reducers/auth.reducers";
 
 
@@ -23,4 +24,14 @@ export const selectErrorMessage = createSelector(
 export const selectIsAuthenticated = createSelector(
   selectAuthState,
   (state: AuthState) => state.isAuthenticated
+);
+
+export const selectInitializationState = createSelector(
+  selectAuthState,
+  (state: AuthState) => state
+);
+
+export const selectReady = createSelector(
+  selectAuthState,
+  (state: AuthState) => state.ready
 );
